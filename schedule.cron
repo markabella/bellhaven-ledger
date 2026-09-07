@@ -1,0 +1,3 @@
+# Run at 06:17 local time every day. The durable JSON decision ledger stays in this checkout.
+17 6 * * * cd /opt/bellhaven-ledger && .venv/bin/python manage.py scan >> logs/daily-sync.log 2>&1
+

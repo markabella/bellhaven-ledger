@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bellhaven Ledger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="masthead">
+    <div><p class="eyebrow">Daily ownership reconciliation</p><h1>Bellhaven <em>Ledger</em></h1><p class="lede">Evidence first. Human approval always.</p></div>
+    <form method="post" action="{{ url_for('run_scan') }}"><button class="scan" type="submit"><span>↻</span> Run fresh scan</button></form>
+  </header>
+  <main>
+    {% with messages = get_flashed_messages() %}{% for message in messages %}<div class="flash">{{ message }}</div>{% endfor %}{% endwith %}
+    <section class="metrics" aria-label="Queue totals">
+      <div><span>Website</span><strong>{{ state.get('source_counts', {}).get('website_locations', '—') }}</strong><small>locations</small></div>
+      <div><span>CRM</span><strong>{{ state.get('source_counts', {}).get('crm_accounts', '—') }}</strong><small>accounts</small></div>
+      <div class="amber"><span>Pending</span><strong>{{ totals.pending }}</strong><small>decisions</small></div>
+      <div class="green"><span>Applied</span><strong>{{ totals.approved }}</strong><small>changes</small></div>
+    </section>
+    <nav class="filters" aria-label="Review filters">
+      <div class="tabs">
+        {% for value, label in [('pending','Pending'),('approved','Applied'),('rejected','Rejected'),('all','All')] %}<a class="{{ 'active' if active_status == value }}" href="?status={{ value }}&kind={{ active_kind }}">{{ label }}</a>{% endfor %}
+      </div>
+      <form method="get"><input type="hidden" name="status" value="{{ active_status }}"><label>Change type
+        <select name="kind" onchange="this.form.submit()">{% for value in ['all','chow','create','duplicate','reparent','stale','update'] %}<option value="{{ value }}" {{ 'selected' if active_kind == value }}>{{ value|replace('_',' ')|title }}</option>{% endfor %}</select>
+      </label></form>
+    </nav>
+    <section class="queue">
+      {% for p in proposals %}
+      <article class="proposal kind-{{ p.kind }}">
+        <div class="rail"><span class="kind">{{ p.kind }}</span><span class="confidence">{{ p.confidence }}%</span></div>
+        <div class="proposal-body">
+          <div class="headline"><div><p class="id">CASE {{ p.id }}</p><h2>{{ p.title }}</h2><p>{{ p.summary }}</p></div><span class="status {{ p.status }}">{{ p.status }}</span></div>
+          <div class="evidence-grid">
+            {% if p.website %}<section><h3>Website truth</h3><dl>
+              <dt>Name</dt><dd>{{ p.website.name }}</dd><dt>Address</dt><dd>{{ p.website.address }}, {{ p.website.city }}, {{ p.website.state }} {{ p.website.zip }}</dd><dt>Care</dt><dd>{{ p.website.care_offerings|join(' · ') }}</dd><dt>Contact</dt><dd>{{ p.website.phone }} · {{ p.website.administrator }}</dd>
+            </dl><a class="source" href="{{ p.website.source_url }}" target="_blank" rel="noreferrer">Open source ↗</a></section>{% endif %}
+            {% for account in p.crm %}<section><h3>CRM {{ 'survivor' if loop.first and p.kind == 'duplicate' else 'record' }}</h3><dl>
+              <dt>ID</dt><dd class="mono">{{ account.account_id }}</dd><dt>Name</dt><dd>{{ account.name }}</dd><dt>Address</dt><dd>{{ account.billing_street }}, {{ account.billing_city }}, {{ account.billing_state }} {{ account.billing_zip }}</dd><dt>Parent</dt><dd>{{ account.parent_name or 'None' }}</dd><dt>Financials</dt><dd>${{ '{:,.0f}'.format(account.lifetime_revenue) }} revenue · ${{ '{:,.0f}'.format(account.outstanding_ar) }} AR</dd>
+            </dl></section>{% endfor %}
+          </div>
+          <div class="proof">{% for item in p.evidence %}<span>{{ item }}</span>{% endfor %}</div>
+          <details><summary>Exact CRM writes</summary>{% for action in p.actions %}<pre>{{ action.method }} {{ action.path }}
+{{ action.body|tojson(indent=2) }}</pre>{% endfor %}</details>
+          {% if p.status == 'pending' %}<div class="actions"><form method="post" action="{{ url_for('decide', proposal_id=p.id, decision='reject') }}"><button class="reject">Reject</button></form><form method="post" action="{{ url_for('decide', proposal_id=p.id, decision='approve') }}"><button class="approve">Approve & write</button></form></div>{% else %}<p class="decision">Decision recorded {{ p.decided_at }}</p>{% endif %}
+        </div>
+      </article>
+      {% else %}<div class="empty"><strong>Queue clear.</strong><span>No proposals match this view.</span></div>{% endfor %}
+    </section>
+  </main>
+  <footer>Generated {{ state.generated_at or 'not yet scanned' }} · Local review surface · No automatic writes</footer>
+</body>
+</html>
