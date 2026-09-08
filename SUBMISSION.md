@@ -1,12 +1,18 @@
 # Clipboard Analyst Assessment — Submission
 
+## Submission timeline
+
+- Workspace created: Sep 7, 2026, 5:39 PM CDT
+- Submission deadline: Sep 9, 2026, 5:39 PM CDT
+- Submitted: Sep 7, 2026, 6:54 PM CDT
+
 ## Repository link
 
-Upload the packaged `bellhaven-ledger.zip` to a public GitHub repository or shared Drive folder, then paste that URL into the assessment form.
+[Public GitHub repository](https://github.com/markabella/bellhaven-ledger). The packaged `bellhaven-ledger.zip` is also stored in Google Drive.
 
 ## Actual time spent
 
-0.8 hours (AI-assisted implementation, data review, CRM correction, and verification).
+0.8 hours of active work within a 1 hour 15 minute workspace window (AI-assisted implementation, data review, CRM correction, and verification).
 
 ## Write-up
 
@@ -16,4 +22,10 @@ The CHOW SOP is a first-class branch, not a reviewer reminder. Before any re-par
 
 I used Codex to scaffold the Python pipeline, challenge ambiguous matches, inspect all 29 evidence cards, and add tests and end-state assertions. I did not use an LLM in the runtime matcher: deterministic evidence is cheaper, reproducible, and easier for an operator to audit. The finished CRM has 34 active Bellhaven child accounts for 34 website locations, two valid CHOW chains, seven inactive duplicate records, and zero remaining proposals.
 
-Next I would move the JSON ledger to a small transactional database, add authenticated reviewers and two-person approval for high-revenue CHOW cases, record source snapshots for historical audits, and emit alerts when confidence drops or the site structure changes.
+Next, I’d move the JSON ledger into a small transactional database.
+
+I’d add reviewer logins and require a second approval for high-revenue CHOW cases.
+
+I’d also save each source snapshot, so there’s a clear audit trail.
+
+If confidence drops or the site structure changes, the system would flag it.
